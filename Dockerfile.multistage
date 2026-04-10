@@ -1,0 +1,25 @@
+#This is the stage 1 builder
+FROM python:3.14-slim AS builder 
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt --target /app/libraries 
+
+COPY . . 
+
+# I will take another base image with even lesser size (minimal)
+# This is Stage 2 Deployer 
+FROM  gcr.io/distroless/python3-debian12 AS deployer 
+
+WORKDIR /app
+
+COPY --from=builder /app/libraries /app/libraries
+
+ENV PYTHONPATH="/app/libraries"
+
+COPY --from=builder /app .  
+
+CMD ["run.py"]
+  
